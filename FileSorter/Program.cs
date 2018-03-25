@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,48 +14,44 @@ namespace FileSorter
         {
             if (args.Length == 0)
             {
-                Console.WriteLine("Argument missing.");
+                Console.WriteLine("Please specify a directory");
+                Console.WriteLine("Usage: FileSorter [DIRECTORY] [OPTIONS]");
+                Console.WriteLine("Options: -r  scan sub directories too");
+
+                Console.WriteLine("Optional use FileSorter -register to add the application to your context menu.");
+                Console.WriteLine("You need to have Admin access!!!");
+                Console.ReadKey();
                 return;
             }
                 
             if (args[0] == "-register")
             {
                 Console.WriteLine("Adding FileSorter to context menu.");
-                //Check if Registry entry already exists
-                RegistryKey check = Registry.CurrentUser.OpenSubKey(@"Folder\shell\FileSorter");
-                if(check != null)
-                {
-                    Console.WriteLine("Already added to context menu.");
-                    return;
-                }
-                string path = System.Reflection.Assembly.GetEntryAssembly().Location;//Environment.GetCommandLineArgs()[0];
-                RegistryKey registryKey;
-                registryKey = Registry.ClassesRoot.CreateSubKey(@"Folder\shell\FileSorter");
-                registryKey = Registry.ClassesRoot.CreateSubKey(@"Folder\shell\FileSorter\command");
-
-                //To get the location the assembly normally resides on disk or the install directory
-                registryKey.SetValue("", path + " %1");
-
+                AddContextMenu();
                 return;
             }
 
             string directory = args[0];
-
             Console.WriteLine("Working Directory: {0}", directory);
-            Console.WriteLine();
 
             //Create File Type List
             List<FileType> fileTypesList = CreateFileTypeList();
 
+            SearchOption searchOption = SearchOption.TopDirectoryOnly;
+            if (args.Length == 2 && args[1] == "-r")
+            {
+                searchOption = SearchOption.AllDirectories;
+            }
+            
             //Get all files in Directory
-            string[] fileList = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
+            string[] fileList = Directory.GetFiles(directory, "*.*", searchOption);
             foreach (string file in fileList)
             {
 
                 string dirName = CheckExtension(fileTypesList, file);
                 if (dirName != null)
                 {
-                    string tempPath = string.Format("{0}\\{1}\\{2}", directory, dirName, file.Substring(file.LastIndexOf('\\') + 1));
+                    string tempPath = $"{directory}\\{dirName}\\{file.Substring(file.LastIndexOf('\\') + 1)}";
                     MoveFile(file, tempPath);
                 }
                 else
@@ -65,7 +60,7 @@ namespace FileSorter
                 }
             }
             
-            //Console.ReadKey();
+            Console.ReadKey();
         }
 
         private static List<FileType> CreateFileTypeList()
@@ -74,7 +69,7 @@ namespace FileSorter
             FileType Audio = new FileType("Audio", new string[] { "ogg", "oga", "mp3", "wav", "flac" });
             FileType Apps = new FileType("Apps", new string[] { "exe", "msi" });
             FileType Documents = new FileType("Documents", new string[] { "txt", "doc", "docx", "pdf", "xls", "odt", "ott", "oth", "odm", "csv", "rtf", "odp", "pptx" });
-            FileType Images = new FileType("Images", new string[] { "tif", "jpg", "bmp", "png", "dds", "psd", "gif", "tga", "sgv" });
+            FileType Images = new FileType("Images", new string[] { "tif", "jpg", "bmp", "png", "dds", "psd", "gif", "tga", "sgv", "pdn" });
             FileType DiscImages = new FileType("DiscImages", new string[] { "iso", "bin", "cue" });
 
             List<FileType> fileTypesList = new List<FileType>
@@ -92,7 +87,7 @@ namespace FileSorter
         static string CheckExtension(List<FileType> fileTypesList, string file)
         {
             string fileExt = file.Substring(file.LastIndexOf('.') + 1);
-            foreach(FileType fileType in fileTypesList)
+            foreach (FileType fileType in fileTypesList)
             {
                 if (fileType.Extensions.Contains(fileExt))
                 {
@@ -112,6 +107,28 @@ namespace FileSorter
                 File.Move(path, destinationPath);
                 Console.WriteLine("{0} was moved to {1}.", path.Substring(path.LastIndexOf('\\') + 1), destinationPath);
             }
+            else
+            {
+                Console.WriteLine("File already exists.{0}",path);
+            }
+        }
+
+        static void AddContextMenu()
+        {
+            //Check if Registry entry already exists
+            RegistryKey check = Registry.CurrentUser.OpenSubKey(@"Folder\shell\FileSorter");
+            if (check != null)
+            {
+                Console.WriteLine("Already added to context menu.");
+                return;
+            }
+            string path = System.Reflection.Assembly.GetEntryAssembly().Location;//Environment.GetCommandLineArgs()[0];
+            RegistryKey registryKey;
+            registryKey = Registry.ClassesRoot.CreateSubKey(@"Folder\shell\FileSorter");
+            registryKey = Registry.ClassesRoot.CreateSubKey(@"Folder\shell\FileSorter\command");
+
+            //To get the location the assembly normally resides on disk or the install directory
+            registryKey.SetValue("", path + " %1");
         }
 
     }
