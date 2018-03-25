@@ -15,7 +15,6 @@ namespace FileSorter
         {
             if (args.Length == 0)
             {
-
                 Console.WriteLine("Argument missing.");
                 return;
             }
@@ -36,7 +35,6 @@ namespace FileSorter
                 registryKey = Registry.ClassesRoot.CreateSubKey(@"Folder\shell\FileSorter\command");
 
                 //To get the location the assembly normally resides on disk or the install directory
-                
                 registryKey.SetValue("", path + " %1");
 
                 return;
@@ -54,6 +52,7 @@ namespace FileSorter
             string[] fileList = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
             foreach (string file in fileList)
             {
+
                 string dirName = CheckExtension(fileTypesList, file);
                 if (dirName != null)
                 {
@@ -65,24 +64,18 @@ namespace FileSorter
                     Console.WriteLine("Unknown File Type: {0}", file);
                 }
             }
-            Console.ReadKey();
+            
+            //Console.ReadKey();
         }
 
         private static List<FileType> CreateFileTypeList()
-        {
-            string[] videoFiles = { "mp4", "avi", "mkv", "mov", "wmv", "divx", "oga", "oga" };
-            string[] audioFiles = { "ogg", "oga", "mp3", "wav", "flac" };
-            string[] applicationFiles = { "exe", "msi" };
-            string[] documentFiles = { "txt", "doc", "docx", "pdf", "xls", "odt", "ott", "oth", "odm", "csv", "rtf", "odp", "pptx" };
-            string[] imageFiles = { "tif", "jpg", "bmp", "png", "dds", "psd", "gif", "tga", "sgv" };
-            string[] discImageFiles = { "iso", "bin", "cue" };
-
-            FileType Video = new FileType("Video", videoFiles);
-            FileType Audio = new FileType("Audio", audioFiles);
-            FileType Apps = new FileType("Apps", applicationFiles);
-            FileType Documents = new FileType("Documents", documentFiles);
-            FileType Images = new FileType("Images", imageFiles);
-            FileType DiscImages = new FileType("DiscImages", discImageFiles);
+        {         
+            FileType Video = new FileType("Video", new string[] { "mp4", "avi", "mkv", "mov", "wmv", "divx", "oga", "oga" });
+            FileType Audio = new FileType("Audio", new string[] { "ogg", "oga", "mp3", "wav", "flac" });
+            FileType Apps = new FileType("Apps", new string[] { "exe", "msi" });
+            FileType Documents = new FileType("Documents", new string[] { "txt", "doc", "docx", "pdf", "xls", "odt", "ott", "oth", "odm", "csv", "rtf", "odp", "pptx" });
+            FileType Images = new FileType("Images", new string[] { "tif", "jpg", "bmp", "png", "dds", "psd", "gif", "tga", "sgv" });
+            FileType DiscImages = new FileType("DiscImages", new string[] { "iso", "bin", "cue" });
 
             List<FileType> fileTypesList = new List<FileType>
             {
@@ -112,8 +105,6 @@ namespace FileSorter
         static void MoveFile(string path, string destinationPath)
         {
             // Ensure that the target does not exist.
-            //if (File.Exists(destinationPath))
-            //File.Delete(destinationPath);
             if (!File.Exists(destinationPath))
             {
                 // Create Directory and Move the file.
